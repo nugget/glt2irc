@@ -2,6 +2,7 @@
 
 package require irc
 package require tls
+package require Syslog
 
 source [file join [file dirname [info script]] "config.tcl"]
 
@@ -27,23 +28,42 @@ proc find_url {msg} {
 }
 
 proc sendmsg {msg channel} {
-	::irc::config logger 1
-	::irc::config debug 1
+	logmsg "Connecting to IRC"
+	::irc::config logger 0
+	::irc::config debug 0
 	set cn [::irc::connection]
 	$cn connect $::config(hostname) $::config(port)
 	::tls::import [$cn socket]
+	logmsg "Converted socket [$cn socket] to SSL"
 	$cn send "PASS $::config(password)"
 	$cn user $::config(nick) localhost domain "macnugget.org"
 	$cn nick $::config(nick)
 	after 10000 "$cn privmsg $channel \"$msg\""
 }
 
+proc logmsg {buf} {
+	syslog -ident glt2irc notice $buf
+	puts $buf
+}
+
+proc alldone {} {
+	logmsg "All Done"
+	exit 0
+}
+
 proc main {} {
+	logmsg "glt2irc starting"
 	set msg [read_email]
 	set url [find_url $msg]
-	puts $url
-	sendmsg "The Vancouver BMO Marathon has started!  You should be able to stalk my progress at $url" slackbot
-	after 30000 exit
+	if {$url eq ""} {
+		logmsg "No URL found in message body"
+		exit 0
+	}
+
+	logmsg "Informing the world about $url"
+
+	sendmsg "The Vancouver BMO Marathon has started!  You should be able to stalk my progress at $url" $::config(target)
+	after 30000 alldone
 	vwait die
 }
 

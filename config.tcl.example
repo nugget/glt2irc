@@ -3,4 +3,5 @@ array set ::config {
 	port			"6667"
 	nick			"nickname"
 	password		"org.Akds48sdkzsfADSFH301"
+	target			"#chat"
 }

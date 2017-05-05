@@ -1,0 +1,6 @@
+array set ::config {
+	hostname		"org.irc.slack.com"
+	port			"6667"
+	nick			"nickname"
+	password		"org.Akds48sdkzsfADSFH301"
+}
